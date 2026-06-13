@@ -1,0 +1,477 @@
+import React, { useState, useMemo } from 'react';
+import { useStore } from '../store/useStore';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+
+interface ActionState {
+  solar: number;
+  wind: number;
+  coal: number;
+  battery: number;
+  ev: number;
+  transit: number;
+  cycling: number;
+  plantBased: number;
+  waste: number;
+  farming: number;
+  reforestation: number;
+  mangrove: number;
+  wetland: number;
+}
+
+const DEFAULT_ACTIONS: ActionState = {
+  solar: 0, wind: 0, coal: 0, battery: 0,
+  ev: 0, transit: 0, cycling: 0,
+  plantBased: 0, waste: 0, farming: 0,
+  reforestation: 0, mangrove: 0, wetland: 0,
+};
+
+const ACTION_GROUPS = [
+  {
+    title: 'Energy Transition',
+    icon: 'bolt',
+    color: 'text-secondary',
+    items: [
+      { key: 'solar',   label: 'Solar Expansion', desc: 'Deploy massive grid-scale solar farms.'          },
+      { key: 'wind',    label: 'Wind Energy',      desc: 'Accelerate offshore and onshore wind turbines.' },
+      { key: 'coal',    label: 'Coal Phase-Out',   desc: 'Retire coal-fired power plants globally.'       },
+      { key: 'battery', label: 'Battery Storage',  desc: 'Install utility-scale energy storage.'          },
+    ],
+  },
+  {
+    title: 'Sustainable Transport',
+    icon: 'directions_transit',
+    color: 'text-tertiary',
+    items: [
+      { key: 'ev',      label: 'EV Adoption',         desc: 'Transition fleets and consumer cars to electric.'           },
+      { key: 'transit', label: 'Public Transit',       desc: 'Expand metro, zero-emission buses, and light rail.'        },
+      { key: 'cycling', label: 'Cycling Infrastructure', desc: 'Construct protected urban bike corridors.'               },
+    ],
+  },
+  {
+    title: 'Food & Agriculture',
+    icon: 'restaurant',
+    color: 'text-primary',
+    items: [
+      { key: 'plantBased', label: 'Plant-Based Meals',  desc: 'Promote low-carbon, plant-rich diets.'                  },
+      { key: 'waste',      label: 'Reduce Food Waste',  desc: 'Optimise supply chain and household waste.'             },
+      { key: 'farming',    label: 'Sustainable Farming',desc: 'Scale regenerative and low-nitrogen farming.'           },
+    ],
+  },
+  {
+    title: 'Natural Solutions',
+    icon: 'forest',
+    color: 'text-emerald-400',
+    items: [
+      { key: 'reforestation', label: 'Reforestation',        desc: 'Restore native forests and stop deforestation.'          },
+      { key: 'mangrove',      label: 'Mangrove Restoration', desc: 'Protect and replant vital coastal mangroves.'            },
+      { key: 'wetland',       label: 'Wetland Protection',   desc: 'Conserve marshes and peatlands for carbon capture.'      },
+    ],
+  },
+];
+
+const YEARS = [2025, 2030, 2040, 2050] as const;
+type ProjectionYear = typeof YEARS[number];
+
+export const FutureEarth: React.FC = () => {
+  const { carbonFootprint, emissionBreakdown } = useStore();
+  const [actions, setActions] = useState<ActionState>(DEFAULT_ACTIONS);
+  const [activeYear, setActiveYear] = useState<ProjectionYear>(2040);
+  const [activeTab, setActiveTab] = useState<'co2' | 'temp' | 'biodiversity'>('temp');
+
+
+  const currentScenario = useMemo(() => {
+    const values = Object.values(actions);
+    if (values.every((v) => v === 0)) return 'bau';
+    if (values.every((v) => v === 40)) return 'moderate';
+    if (values.every((v) => v === 90)) return 'netzero';
+    return 'custom';
+  }, [actions]);
+
+  const handleApplyPreset = (scenario: 'bau' | 'moderate' | 'netzero') => {
+    const val = scenario === 'bau' ? 0 : scenario === 'moderate' ? 40 : 90;
+    setActions(Object.fromEntries(Object.keys(DEFAULT_ACTIONS).map((k) => [k, val])) as unknown as ActionState);
+  };
+
+  const updateActionValue = (key: keyof ActionState, value: number) =>
+    setActions((prev) => ({ ...prev, [key]: value }));
+
+  // ─── Performance fix: split into two memos ──────────────────────────────
+  // timelineData only recalculates when actions or footprint/breakdown change
+  // (not when activeYear changes)
+  const timelineData = useMemo(() => {
+    const breakdown = emissionBreakdown || { transport: 45, home: 30, diet: 15, lifestyle: 10 };
+    const transportBase  = (carbonFootprint * breakdown.transport)  / 100;
+    const homeBase       = (carbonFootprint * breakdown.home)       / 100;
+    const dietBase       = (carbonFootprint * breakdown.diet)       / 100;
+    const lifestyleBase  = (carbonFootprint * breakdown.lifestyle)  / 100;
+
+    const rEnergy    = (actions.solar * 0.25 + actions.wind * 0.20 + actions.coal * 0.35 + actions.battery * 0.20) / 100;
+    const rTransport = (actions.ev * 0.40 + actions.transit * 0.40 + actions.cycling * 0.20) / 100;
+    const rFood      = (actions.plantBased * 0.50 + actions.waste * 0.30 + actions.farming * 0.20) / 100;
+    const rNature    = (actions.reforestation * 0.40 + actions.mangrove * 0.30 + actions.wetland * 0.30) / 100;
+
+    const totalReduction = (transportBase * rTransport) + (homeBase * rEnergy) + (dietBase * rFood) + (lifestyleBase * rNature);
+    const rAvg       = (rEnergy + rTransport + rFood + rNature) / 4;
+    const rNatureAvg = (actions.reforestation + actions.mangrove + actions.wetland) / 300;
+
+    return {
+      timeline: YEARS.map((yr) => {
+        let pctRealized = 0;
+        if (yr === 2030) pctRealized = 0.3;
+        else if (yr === 2040) pctRealized = 0.75;
+        else if (yr === 2050) pctRealized = 1.0;
+
+        const scale = yr === 2025 ? 1 : yr === 2030 ? 1.05 : yr === 2040 ? 1.15 : 1.25;
+        const bauEmissions    = carbonFootprint * scale;
+        const bauCO2          = 420 + (yr - 2025) * (yr <= 2030 ? 3 : 3.2);
+        const bauTemp         = 1.2 + (yr - 2025) * 0.044;
+        const bauBiodiversity = Math.max(2, 10 - (yr - 2025) * 0.32);
+        const bauSeaLevel     = (yr - 2025) * 0.012;
+
+        const projectedEmissions    = Math.max(1.2, bauEmissions - totalReduction * pctRealized);
+        const projectedCO2          = 420 + (bauCO2 - 420) * (1 - rAvg * 1.125 * pctRealized);
+        const projectedTemp         = 1.2 + (bauTemp - 1.2) * (1 - rAvg * 0.85 * pctRealized);
+        const projectedBiodiversity = Math.min(99, bauBiodiversity + rAvg * 38 * pctRealized + rNatureAvg * 40 * pctRealized);
+        const projectedSeaLevel     = Math.max(0, bauSeaLevel * (1 - (rNatureAvg * 0.7 + rAvg * 0.3) * pctRealized));
+
+        return {
+          year: yr,
+          bauEmissions:         parseFloat(bauEmissions.toFixed(1)),
+          projectedEmissions:   parseFloat(projectedEmissions.toFixed(1)),
+          bauCO2:               Math.round(bauCO2),
+          projectedCO2:         Math.round(projectedCO2),
+          bauTemp:              parseFloat(bauTemp.toFixed(2)),
+          projectedTemp:        parseFloat(projectedTemp.toFixed(2)),
+          bauBiodiversity:      Math.round(bauBiodiversity),
+          projectedBiodiversity:Math.round(projectedBiodiversity),
+          bauSeaLevel:          parseFloat(bauSeaLevel.toFixed(2)),
+          projectedSeaLevel:    parseFloat(projectedSeaLevel.toFixed(2)),
+          seaLevelAvoided:      parseFloat((bauSeaLevel - projectedSeaLevel).toFixed(2)),
+        };
+      }),
+      rAvg,
+      rNatureAvg,
+    };
+  }, [carbonFootprint, emissionBreakdown, actions]);
+
+  // currentData only recalculates when activeYear or timelineData changes
+  const currentData = useMemo(
+    () => timelineData.timeline.find((dp) => dp.year === activeYear) ?? timelineData.timeline[2],
+    [timelineData.timeline, activeYear],
+  );
+
+  // Dynamic AI insights
+  const dynamicInsights = useMemo(() => {
+    const list: string[] = [];
+
+    if (actions.solar > 60 || actions.wind > 60) {
+      list.push(`Renewable energy expansion avoids up to ${(0.4 * (actions.solar + actions.wind) / 200).toFixed(2)}°C of global warming by 2050.`);
+    } else {
+      list.push('Slow solar and wind grid expansion locks in reliance on backup fossil fuel generation.');
+    }
+
+    if (actions.coal > 70) {
+      list.push('Rapid coal phase-out eliminates the primary source of industrial carbon emissions.');
+    } else {
+      list.push('Continued coal operations compromise net-zero timelines, increasing projected 2050 temp.');
+    }
+
+    if (actions.reforestation > 60 || actions.mangrove > 60) {
+      const bioIncrease = Math.round((actions.reforestation * 0.4 + actions.mangrove * 0.3) * 0.5);
+      list.push(`Active reforestation and coastal planting boost biodiversity resilience by +${bioIncrease}%.`);
+    } else {
+      list.push('Deforestation rates outpace natural replenishment, accelerating species habitat loss.');
+    }
+
+    if (actions.plantBased > 50) {
+      list.push('Widespread transition to plant-based meals cuts agricultural emissions, conserving regional soils.');
+    }
+
+    if (actions.ev > 60 && actions.transit > 60) {
+      list.push('Combined EV adoption and public transit expansion cut urban transport pollution in half.');
+    }
+
+    return list.slice(0, 3);
+  }, [actions]);
+
+  // Chart data derived from timelineData (not activeYear — avoids unnecessary recalc)
+  const chartData = useMemo(() =>
+    timelineData.timeline.map((item) => {
+      const entry =
+        activeTab === 'co2'
+          ? { Projected: item.projectedCO2, BAU: item.bauCO2, unit: ' ppm' }
+          : activeTab === 'temp'
+          ? { Projected: item.projectedTemp, BAU: item.bauTemp, unit: ' °C' }
+          : { Projected: item.projectedBiodiversity, BAU: item.bauBiodiversity, unit: '%' };
+
+      return { year: item.year, Projected: entry.Projected, 'Business As Usual': entry.BAU, unit: entry.unit };
+    }),
+    [timelineData.timeline, activeTab],
+  );
+
+  return (
+    <div className="max-w-container-max mx-auto space-y-gutter w-full min-h-full flex flex-col" id="future-earth-page">
+
+      {/* Header */}
+      <header className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 text-secondary mb-2">
+            <span className="material-symbols-outlined" aria-hidden="true">public</span>
+            <span className="font-label-md text-label-md tracking-wider uppercase">Global Projections</span>
+          </div>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">
+            Future Earth Simulator
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mt-1">
+            Model how your sustainability decisions, scaled to a community level, directly impact global climate metrics.
+          </p>
+        </div>
+
+        {/* Scenario Preset Selector */}
+        <div
+          className="bg-surface-container-low border border-white/10 rounded-xl p-2 flex items-center gap-1 w-fit"
+          role="group"
+          aria-label="Select scenario preset"
+        >
+          {([
+            { id: 'bau',      label: 'Business As Usual', activeClass: 'bg-error/20 text-error border border-error/20' },
+            { id: 'moderate', label: 'Moderate Action',   activeClass: 'bg-tertiary/20 text-tertiary border border-tertiary/20' },
+            { id: 'netzero',  label: 'Net Zero 2050',     activeClass: 'bg-secondary/20 text-secondary border border-secondary/20 shadow-[0_0_12px_rgba(211,254,50,0.2)]' },
+          ] as const).map((s) => (
+            <button
+              key={s.id}
+              onClick={() => handleApplyPreset(s.id)}
+              aria-pressed={currentScenario === s.id}
+              className={`px-4 py-2 rounded-lg font-label-sm text-label-sm transition-all ${
+                currentScenario === s.id ? s.activeClass : 'text-on-surface-variant hover:text-on-surface border border-transparent'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter flex-1 h-full min-h-[600px]">
+
+        {/* Left Column: Simulation Controls */}
+        <section className="lg:col-span-5 flex flex-col gap-6" aria-label="Simulation control sliders">
+          <div className="glass-panel rounded-2xl p-6 flex flex-col gap-6">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <span className="material-symbols-outlined text-secondary" aria-hidden="true">tune</span>
+              <h2 className="font-headline-md text-headline-md text-on-surface">Simulation Controls</h2>
+              {currentScenario === 'custom' && (
+                <span className="bg-white/5 border border-white/10 text-on-surface-variant text-[10px] px-2 py-0.5 rounded-full ml-auto uppercase tracking-wider">
+                  Custom Config
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-6 max-h-[650px] overflow-y-auto pr-2 no-scrollbar">
+              {ACTION_GROUPS.map((group) => (
+                <div key={group.title} className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                    <span className={`material-symbols-outlined ${group.color}`} aria-hidden="true">{group.icon}</span>
+                    <h3 className="font-label-md text-label-md font-semibold text-on-surface">{group.title}</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {group.items.map((action) => {
+                      const val = actions[action.key as keyof ActionState];
+                      const sliderId = `slider-${action.key}`;
+                      return (
+                        <div key={action.key} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <label htmlFor={sliderId} className="font-label-sm text-label-sm text-on-surface block">
+                                {action.label}
+                              </label>
+                              <span className="text-[10px] text-on-surface-variant block">{action.desc}</span>
+                            </div>
+                            <span className="font-label-sm text-label-sm text-secondary font-mono" aria-hidden="true">{val}%</span>
+                          </div>
+                          <div className="relative w-full h-1 mt-1">
+                            <div
+                              className="absolute top-0 left-0 h-1 bg-secondary rounded-full"
+                              style={{ width: `${val}%` }}
+                              aria-hidden="true"
+                            />
+                            <input
+                              id={sliderId}
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={val}
+                              aria-label={`${action.label}: ${val}%`}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={val}
+                              aria-valuetext={`${val}%`}
+                              onChange={(e) => updateActionValue(action.key as keyof ActionState, parseInt(e.target.value))}
+                              className="absolute top-[-10px] w-full cursor-pointer opacity-0 h-6"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Right Column: Metrics & Charts */}
+        <section className="lg:col-span-7 flex flex-col gap-6" aria-label="Simulation metrics and charts">
+
+          {/* Year Selector */}
+          <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
+            <h2 className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
+              Projection Target Timeline
+            </h2>
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between px-2 font-label-md text-label-md font-bold" role="group" aria-label="Select projection year">
+                {YEARS.map((yr) => (
+                  <button
+                    key={yr}
+                    onClick={() => setActiveYear(yr)}
+                    aria-pressed={activeYear === yr}
+                    className={`transition-all ${activeYear === yr ? 'text-secondary bg-secondary/10 px-4 py-1 rounded-full shadow-[0_0_12px_rgba(211,254,50,0.3)] border border-secondary/20' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  >
+                    {yr}
+                  </button>
+                ))}
+              </div>
+              <div className="relative w-full h-2 bg-surface-dim rounded-full mt-2 overflow-hidden border border-white/5" aria-hidden="true">
+                <div
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-tertiary to-secondary transition-all duration-300"
+                  style={{ width: `${((activeYear - 2025) / 25) * 100}%` }}
+                />
+                <input
+                  type="range"
+                  min={2025}
+                  max={2050}
+                  step={5}
+                  value={activeYear}
+                  aria-label="Projection year"
+                  aria-valuemin={2025}
+                  aria-valuemax={2050}
+                  aria-valuenow={activeYear}
+                  aria-valuetext={`${activeYear}`}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    const snapped = YEARS.reduce((prev, curr) =>
+                      Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev,
+                    );
+                    setActiveYear(snapped);
+                  }}
+                  className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Temp Delta',    value: `${currentData.projectedTemp.toFixed(2)}°C`, bau: `BAU: ${currentData.bauTemp.toFixed(2)}°C`, color: 'border-r-secondary text-secondary' },
+              { label: 'Biodiversity',  value: `${currentData.projectedBiodiversity}%`,     bau: `BAU: ${currentData.bauBiodiversity}%`,     color: 'border-r-primary text-primary'     },
+              { label: 'Sea Avoided',   value: `${currentData.seaLevelAvoided.toFixed(2)}m`,bau: `Rise BAU: ${currentData.bauSeaLevel.toFixed(2)}m`, color: 'border-r-tertiary text-tertiary'  },
+              { label: 'Atmos. CO₂',   value: `${currentData.projectedCO2} ppm`,           bau: `BAU: ${currentData.bauCO2} ppm`,           color: 'border-r-outline-variant text-on-surface' },
+            ].map((metric) => (
+              <div key={metric.label} className={`glass-panel rounded-xl p-4 flex flex-col border-r-2 ${metric.color.split(' ')[0]} shadow-lg`}>
+                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">{metric.label}</span>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className={`font-display-lg text-[28px] md:text-[32px] transition-all leading-none ${metric.color.split(' ')[1]}`}>
+                    {metric.value}
+                  </span>
+                </div>
+                <span className="text-[10px] text-on-surface-variant mt-2 block">{metric.bau}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Chart */}
+          <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px]">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-headline-md text-headline-md text-on-surface">Projection Curves</h3>
+              <div
+                className="flex bg-white/5 border border-white/10 rounded-lg p-1"
+                role="tablist"
+                aria-label="Chart metric selection"
+              >
+                {([
+                  { id: 'temp',         label: 'Temp Delta'     },
+                  { id: 'co2',          label: 'Atmospheric CO₂'},
+                  { id: 'biodiversity', label: 'Biodiversity'   },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-3 py-1 rounded-md font-label-sm text-label-sm transition-all ${activeTab === tab.id ? 'bg-secondary text-on-secondary shadow-[0_0_8px_rgba(211,254,50,0.3)]' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 w-full text-xs">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="projGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#d3fe32" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#d3fe32" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="bauGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ffb4ab" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#ffb4ab" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="year" tick={{ fill: '#c1c8c4', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#c1c8c4', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ background: '#141d1b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                    itemStyle={{ color: '#dbe5e1' }}
+                    labelStyle={{ color: '#c1c8c4' }}
+                    formatter={(value, name) => [`${value}${chartData[0]?.unit ?? ''}`, String(name)]}
+                  />
+                  <Area type="monotone" dataKey="Projected" stroke="#d3fe32" strokeWidth={2.5} fill="url(#projGrad)"
+                    dot={{ fill: '#0c1513', stroke: '#d3fe32', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, fill: '#d3fe32', stroke: '#0c1513', strokeWidth: 2 }} />
+                  <Area type="monotone" dataKey="Business As Usual" stroke="#ffb4ab" strokeWidth={1.5}
+                    strokeDasharray="4 4" fill="url(#bauGrad)"
+                    dot={{ fill: '#0c1513', stroke: '#ffb4ab', strokeWidth: 1.5, r: 3 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* AI Insights */}
+          <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group">
+            <div className="absolute -right-10 -top-10 w-24 h-24 bg-tertiary/10 rounded-full blur-2xl group-hover:bg-tertiary/20 transition-all" aria-hidden="true" />
+            <div className="flex items-center gap-3 mb-4">
+              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">auto_awesome</span>
+              <h3 className="font-label-md text-label-md text-tertiary tracking-widest uppercase">AI Simulation Analysis</h3>
+            </div>
+            <div className="space-y-3 relative z-10" aria-live="polite" aria-atomic="false">
+              {dynamicInsights.map((insight, idx) => (
+                <div key={idx} className="flex gap-3 items-start border-l-2 border-tertiary/40 pl-3">
+                  <p className="font-body-md text-body-md text-on-surface leading-snug">"{insight}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </section>
+      </div>
+    </div>
+  );
+};

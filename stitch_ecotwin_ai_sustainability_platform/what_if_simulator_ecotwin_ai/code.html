@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EcoTwin AI - What-If Simulator</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from Style Guidance -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error": "#ffb4ab", "outline": "#8c928f", "surface-dim": "#0c1513", "on-background": "#dbe5e1", "primary": "#b0cdc2", "surface-container-high": "#232c29", "tertiary": "#afc6ff", "on-tertiary-fixed-variant": "#004299", "on-primary": "#1c352e", "surface": "#0c1513", "on-error-container": "#ffdad6", "secondary-fixed": "#c8f323", "on-primary-fixed": "#052019", "on-error": "#690005", "tertiary-fixed": "#d9e2ff", "error-container": "#93000a", "on-tertiary-fixed": "#001944", "surface-variant": "#2d3734", "on-secondary": "#293500", "on-tertiary": "#002d6d", "surface-bright": "#323b39", "primary-fixed": "#cce9de", "outline-variant": "#424845", "on-primary-container": "#769188", "primary-container": "#0f2922", "surface-container-low": "#141d1b", "surface-tint": "#b0cdc2", "on-secondary-fixed-variant": "#3d4d00", "surface-container": "#18211f", "secondary-container": "#b8e100", "tertiary-container": "#002255", "on-surface-variant": "#c1c8c4", "on-secondary-container": "#4e6100", "inverse-on-surface": "#293230", "secondary": "#d3fe32", "inverse-surface": "#dbe5e1", "tertiary-fixed-dim": "#afc6ff", "on-secondary-fixed": "#171e00", "background": "#0c1513", "surface-container-highest": "#2d3734", "on-primary-fixed-variant": "#324c44", "on-surface": "#dbe5e1", "secondary-fixed-dim": "#aed500", "inverse-primary": "#4a645b", "surface-container-lowest": "#07100e", "on-tertiary-container": "#4787ff", "primary-fixed-dim": "#b0cdc2"
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"
+            },
+            spacing: {
+              "margin-tablet": "32px", "margin-mobile": "20px", "unit": "8px", "gutter": "24px", "container-max": "1440px", "margin-desktop": "64px"
+            },
+            fontFamily: {
+              "display-lg": ["Montserrat"], "label-sm": ["Inter"], "headline-md": ["Montserrat"], "headline-lg-mobile": ["Montserrat"], "body-lg": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Montserrat"]
+            },
+            fontSize: {
+              "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+              "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}],
+              "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+              "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+              "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+              "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+              "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+              "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom Range Slider Styles for Biophilic Futurism Theme */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            position: relative;
+            z-index: 10;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: theme('colors.secondary');
+            cursor: pointer;
+            box-shadow: 0 0 16px theme('colors.secondary');
+            margin-top: -10px;
+            border: 2px solid theme('colors.surface');
+            transition: transform 0.1s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.1);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: theme('colors.surface-variant');
+            border-radius: theme('borderRadius.full');
+            border: none;
+        }
+        
+        /* Glass panel utility */
+        .glass-panel {
+            background-color: theme('colors.surface-container-low');
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Ambient Glow */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, theme('colors.primary-fixed-dim') 0%, transparent 70%);
+            opacity: 0.15;
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden min-h-screen flex flex-col md:flex-row">
+<!-- Atmospheric Background Image -->
+<div class="fixed inset-0 z-[-2] bg-cover bg-center opacity-20 mix-blend-screen" data-alt="A macro photograph of lush, dark green exotic foliage overlayed with faint, glowing geometric digital network lines. The lighting is moody and cinematic, emphasizing deep shadows and vibrant bioluminescent green and cyan accents, perfectly blending natural elements with futuristic technology in a high-fidelity aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLsPn4ETYrsTElcIpCKK2xXYdlDZJ-YL-tFr-ywqNJS08VxRPJ7KyDzMkalOaaPKz2NNMy-y5jkWM8qp-jtnXeESDvF1uSsJJ2A--pAweugI-W7HVOKpksaCSFsZx0esTg0MQ-4ZUDkY2BGowH04NtH_2r0w4lC12XmLUQbXI5V_XFnYRJEUri0zo0SXT0XGJQbYRQx1Qw33plDpECV6y-uk4yp3jKyACeS69ms6SSpbB_-vnMLoko0-9No');"></div>
+<div class="ambient-glow top-[-200px] right-[-100px]"></div>
+<div class="ambient-glow bottom-[-200px] left-[-200px]" style="background: radial-gradient(circle, theme('colors.tertiary') 0%, transparent 70%); opacity: 0.1;"></div>
+<!-- SideNavBar (Desktop Shell) -->
+<nav class="hidden md:flex flex-col h-screen fixed left-0 top-0 w-64 z-40 bg-surface-container-low/80 backdrop-blur-2xl border-r border-white/10 shadow-2xl shadow-black/40 py-8">
+<div class="px-6 mb-12">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">EcoTwin AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Sustainability Engine</p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<!-- Inactive -->
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200 mx-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Inactive -->
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200 mx-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">temp_preferences_custom</span>
+<span class="font-label-md text-label-md">Climate Twin</span>
+</a>
+<!-- Inactive -->
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200 mx-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Assessment</span>
+</a>
+<!-- ACTIVE TAB -->
+<a class="bg-secondary/20 text-secondary border-l-4 border-secondary px-4 py-3 flex items-center gap-3 transition-all duration-200 mx-2 rounded-r-lg" href="#">
+<span class="material-symbols-outlined icon-fill">model_training</span>
+<span class="font-label-md text-label-md">Simulator</span>
+</a>
+<!-- Inactive -->
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200 mx-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">public</span>
+<span class="font-label-md text-label-md">Future Earth</span>
+</a>
+<!-- Inactive -->
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200 mx-2 rounded-lg" href="#">
+<span class="material-symbols-outlined">workspace_premium</span>
+<span class="font-label-md text-label-md">Challenges</span>
+</a>
+</div>
+<div class="mt-auto px-4">
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopNavBar (Mobile Fallback based on instructions to use standard patterns if responsive, though prompt says prohibit top-row text links on mobile. We will just use a simplified header for mobile content area) -->
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 w-full flex flex-col min-h-screen relative z-10">
+<div class="px-margin-mobile md:px-margin-desktop py-8 md:py-12 w-full max-w-container-max mx-auto flex-1 flex flex-col gap-8">
+<!-- Page Header -->
+<header class="flex flex-col gap-2">
+<div class="flex items-center gap-3 text-secondary">
+<span class="material-symbols-outlined">science</span>
+<span class="font-label-md text-label-md tracking-wider uppercase">Scenario Modeling</span>
+</div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg font-bold">What-If Simulator</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mt-2">Adjust your lifestyle variables below to instantly visualize your potential carbon reduction and its real-world environmental equivalent.</p>
+</header>
+<!-- Simulator Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mt-4">
+<!-- Left Column: Input Sliders -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<div class="glass-panel rounded-2xl p-8 relative overflow-hidden group">
+<!-- Subtle inner glow top left -->
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-white/20 to-transparent"></div>
+<div class="absolute top-0 left-0 w-[1px] h-full bg-gradient-to-b from-white/20 to-transparent"></div>
+<div class="flex items-center gap-3 mb-8 border-b border-white/5 pb-4">
+<span class="material-symbols-outlined text-primary">tune</span>
+<h3 class="font-headline-md text-headline-md text-primary">Habit Variables</h3>
+</div>
+<!-- Slider 1 -->
+<div class="mb-10">
+<div class="flex justify-between items-end mb-4">
+<div>
+<label class="font-label-md text-label-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">home_work</span>
+                                        Remote Work
+                                    </label>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Days per week</p>
+</div>
+<div class="font-headline-md text-headline-md text-secondary" id="val-wfh">2</div>
+</div>
+<div class="relative w-full h-1 mt-2">
+<div class="absolute top-0 left-0 h-1 bg-secondary rounded-full" id="fill-wfh" style="width: 40%; box-shadow: 0 0 8px theme('colors.secondary');"></div>
+<input class="absolute top-[-10px] w-full" id="slider-wfh" max="5" min="0" oninput="updateSlider('wfh', this.value, 5)" type="range" value="2"/>
+</div>
+<div class="flex justify-between mt-3 font-label-sm text-label-sm text-on-surface-variant/50">
+<span>0</span>
+<span>5</span>
+</div>
+</div>
+<!-- Slider 2 -->
+<div class="mb-10">
+<div class="flex justify-between items-end mb-4">
+<div>
+<label class="font-label-md text-label-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">restaurant</span>
+                                        Meat Consumption
+                                    </label>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Meals per week</p>
+</div>
+<div class="font-headline-md text-headline-md text-secondary" id="val-meat">14</div>
+</div>
+<div class="relative w-full h-1 mt-2">
+<div class="absolute top-0 left-0 h-1 bg-secondary rounded-full" id="fill-meat" style="width: 66%; box-shadow: 0 0 8px theme('colors.secondary');"></div>
+<input class="absolute top-[-10px] w-full" id="slider-meat" max="21" min="0" oninput="updateSlider('meat', this.value, 21)" type="range" value="14"/>
+</div>
+<div class="flex justify-between mt-3 font-label-sm text-label-sm text-on-surface-variant/50">
+<span>0 (Vegan)</span>
+<span>21 (High)</span>
+</div>
+</div>
+<!-- Slider 3 -->
+<div class="mb-4">
+<div class="flex justify-between items-end mb-4">
+<div>
+<label class="font-label-md text-label-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">flight_takeoff</span>
+                                        Flight Frequency
+                                    </label>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Short-haul flights / year</p>
+</div>
+<div class="font-headline-md text-headline-md text-secondary" id="val-flights">4</div>
+</div>
+<div class="relative w-full h-1 mt-2">
+<div class="absolute top-0 left-0 h-1 bg-secondary rounded-full" id="fill-flights" style="width: 40%; box-shadow: 0 0 8px theme('colors.secondary');"></div>
+<input class="absolute top-[-10px] w-full" id="slider-flights" max="10" min="0" oninput="updateSlider('flights', this.value, 10)" type="range" value="4"/>
+</div>
+<div class="flex justify-between mt-3 font-label-sm text-label-sm text-on-surface-variant/50">
+<span>0</span>
+<span>10+</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Visualization & Outputs -->
+<div class="lg:col-span-7 flex flex-col gap-6">
+<!-- Top Results Canvas (Gauge & Key Stats) -->
+<div class="glass-panel rounded-2xl p-8 relative flex flex-col items-center justify-center min-h-[300px]">
+<!-- Carbon Gauge (CSS/SVG construction for Biophilic aesthetic) -->
+<div class="relative w-64 h-32 overflow-hidden mb-6">
+<!-- Background Track -->
+<div class="absolute top-0 left-0 w-64 h-64 rounded-full border-[12px] border-surface-variant opacity-50 border-b-transparent border-r-transparent transform -rotate-45"></div>
+<!-- Dynamic Fill Track (Simulated reduction) -->
+<div class="absolute top-0 left-0 w-64 h-64 rounded-full border-[12px] border-tertiary border-b-transparent border-r-transparent transform -rotate-45" id="gauge-fill" style="clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); filter: drop-shadow(0 0 12px theme('colors.tertiary')); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+<!-- Core Value Display -->
+<div class="absolute bottom-0 left-0 w-full text-center flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-tertiary tracking-widest uppercase mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">arrow_downward</span> Projected Reduction</span>
+<div class="font-display-lg text-display-lg text-on-surface flex items-baseline gap-1" style="text-shadow: 0 0 20px rgba(175, 198, 255, 0.3);">
+<span id="output-reduction">2.4</span><span class="font-headline-md text-headline-md text-on-surface-variant">t</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">CO2e / Year</span>
+</div>
+</div>
+<!-- Secondary Metrics Grid -->
+<div class="grid grid-cols-2 gap-4 w-full mt-6 border-t border-white/5 pt-6">
+<div class="flex flex-col items-center text-center p-4 rounded-xl bg-surface/30">
+<span class="material-symbols-outlined text-secondary mb-2 icon-fill">park</span>
+<span class="font-headline-md text-headline-md text-on-surface" id="output-trees">120</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Trees Equivalent Saved</span>
+</div>
+<div class="flex flex-col items-center text-center p-4 rounded-xl bg-surface/30">
+<span class="material-symbols-outlined text-primary mb-2 icon-fill">savings</span>
+<span class="font-headline-md text-headline-md text-on-surface" id="output-savings">$450</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Est. Annual Savings</span>
+</div>
+</div>
+</div>
+<!-- Comparison Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Current You -->
+<div class="glass-panel rounded-2xl p-6 border-dashed border-outline-variant/30 bg-surface-container-lowest/50 opacity-80">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Current Baseline</h4>
+<span class="material-symbols-outlined text-on-surface-variant">person</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">14.2t</span>
+<span class="font-body-sm text-body-md text-on-surface-variant">Total Footprint (CO2e)</span>
+</div>
+</div>
+<!-- Simulated You -->
+<div class="glass-panel rounded-2xl p-6 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-50"></div>
+<div class="absolute top-0 left-0 w-full h-[1px] bg-secondary/30"></div>
+<div class="flex justify-between items-center mb-6 relative z-10">
+<h4 class="font-label-md text-label-md text-secondary uppercase tracking-wider flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_theme('colors.secondary')]"></span>
+                                    Simulated Future
+                                </h4>
+<span class="material-symbols-outlined text-secondary">psychology</span>
+</div>
+<div class="flex flex-col gap-1 relative z-10">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface" id="output-future">11.8t</span>
+<span class="font-body-sm text-body-md text-on-surface-variant">New Total Footprint</span>
+</div>
+</div>
+</div>
+<!-- CTA -->
+<div class="mt-4 flex justify-end">
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-8 py-3 rounded-full hover:bg-secondary-fixed transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(211,254,50,0.3)] hover:shadow-[0_0_25px_rgba(211,254,50,0.5)] transform hover:-translate-y-0.5">
+                            Commit to Changes
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer (from JSON) -->
+<footer class="mt-auto w-full relative bottom-0 border-t border-outline-variant/20 bg-surface-container-lowest flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop py-12 max-w-container-max mx-auto">
+<div class="flex items-center gap-2 mb-4 md:mb-0">
+<span class="font-headline-md text-headline-md font-bold text-primary">EcoTwin AI</span>
+<span class="font-body-md text-body-md text-on-surface-variant ml-4 border-l border-white/10 pl-4">© 2024 EcoTwin AI. Carbon Neutral Computing.</span>
+</div>
+<div class="flex flex-wrap gap-6 justify-center">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary hover:underline transition-opacity duration-200" href="#">Resources</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary hover:underline transition-opacity duration-200" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary hover:underline transition-opacity duration-200" href="#">Security</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary hover:underline transition-opacity duration-200" href="#">Sustainability Commitment</a>
+</div>
+</footer>
+</main>
+<!-- Lightweight Interaction JS -->
+<script>
+        function updateSlider(id, value, max) {
+            // Update display value
+            document.getElementById(`val-${id}`).innerText = value + (id === 'flights' && value == 10 ? '+' : '');
+            
+            // Update custom fill width
+            const percentage = (value / max) * 100;
+            document.getElementById(`fill-${id}`).style.width = `${percentage}%`;
+
+            // Simulate calculation logic
+            calculateOutputs();
+        }
+
+        function calculateOutputs() {
+            // Get slider values
+            const wfh = parseInt(document.getElementById('slider-wfh').value);
+            const meat = parseInt(document.getElementById('slider-meat').value);
+            const flights = parseInt(document.getElementById('slider-flights').value);
+
+            // Baseline arbitrary constants for simulation
+            const baselineTotal = 14.2;
+            
+            // Rough simulation math
+            let wfhReduction = (wfh - 1) * 0.2; // assuming baseline 1 day wfh
+            let meatReduction = (14 - meat) * 0.15; // assuming baseline 14 meals
+            let flightReduction = (4 - flights) * 0.4; // assuming baseline 4 flights
+            
+            // Prevent negative reduction in this simple demo if they increase bad habits
+            let totalReduction = (wfhReduction + meatReduction + flightReduction);
+            let displayReduction = totalReduction > 0 ? totalReduction : 0;
+            
+            // Update UI values
+            document.getElementById('output-reduction').innerText = displayReduction.toFixed(1);
+            document.getElementById('output-trees').innerText = Math.round(displayReduction * 50);
+            document.getElementById('output-savings').innerText = '$' + Math.round(displayReduction * 180);
+            
+            let newTotal = baselineTotal - totalReduction;
+            document.getElementById('output-future').innerText = newTotal.toFixed(1) + 't';
+
+            // Animate Gauge
+            // Gauge is a semi-circle (180deg). We map reduction (0 to say 5t) to degrees (0 to 180).
+            // Initial transform is -45deg. Full fill is 135deg. Range is 180deg.
+            let maxReductionScale = 6; // Max expected reduction for gauge scale
+            let fillPercentage = Math.min(Math.max(displayReduction / maxReductionScale, 0), 1);
+            let targetRotation = -45 + (fillPercentage * 180);
+            
+            document.getElementById('gauge-fill').style.transform = `rotate(${targetRotation}deg)`;
+        }
+
+        // Initialize calculations on load
+        calculateOutputs();
+    </script>
+</body></html>

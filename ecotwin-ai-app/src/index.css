@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  /* Default Dark Mode colors */
+  --color-background: #0c1513;
+  --color-on-background: #dbe5e1;
+  --color-surface: #0c1513;
+  --color-on-surface: #dbe5e1;
+  --color-on-surface-variant: #c1c8c4;
+  --color-primary: #b0cdc2;
+  --color-secondary: #d3fe32;
+  --color-tertiary: #afc6ff;
+  --color-outline: #8c928f;
+  --color-outline-variant: #424845;
+  --color-surface-dim: #0c1513;
+  --color-surface-bright: #323b39;
+  --color-surface-container: #18211f;
+  --color-surface-container-low: #141d1b;
+  --color-surface-container-high: #232c29;
+  --color-surface-container-highest: #2d3734;
+  --color-surface-container-lowest: #07100e;
+}
+
+/* Light Mode Overrides */
+.theme-light {
+  --color-background: #f4f7f6;
+  --color-on-background: #0f1816;
+  --color-surface: #ffffff;
+  --color-on-surface: #0f1816;
+  --color-on-surface-variant: #56605c;
+  --color-primary: #2b4f44;
+  --color-secondary: #5d7e00;
+  --color-tertiary: #0a4ebd;
+  --color-outline: #717c77;
+  --color-outline-variant: #c2c9c5;
+  --color-surface-dim: #eef2f0;
+  --color-surface-bright: #ffffff;
+  --color-surface-container: #e3ebe8;
+  --color-surface-container-low: #e9f0ed;
+  --color-surface-container-high: #dde5e2;
+  --color-surface-container-highest: #d2dbe5;
+  --color-surface-container-lowest: #f9fcfb;
+}
+
+/* Eco Green Accent Override */
+.theme-green {
+  --color-secondary: #00ff66;
+  --color-primary: #85e8a7;
+}
+
+/* Blue Corporate Accent Override */
+.theme-blue {
+  --color-secondary: #2e7dff;
+  --color-primary: #afc6ff;
+  --color-tertiary: #d3fe32;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface overflow-x-hidden;
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+  }
+}
+
+@layer utilities {
+
+  /* Glassmorphism Utilities */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-panel-hover:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(211, 254, 50, 0.3);
+    /* Secondary color soft glow */
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 15px rgba(211, 254, 50, 0.4);
+  }
+
+  .glow-tertiary {
+    box-shadow: 0 0 15px rgba(175, 198, 255, 0.4);
+  }
+
+  /* Chart Mockup Gradients */
+  .chart-line-gradient {
+    background: linear-gradient(180deg, rgba(211, 254, 50, 0.2) 0%, rgba(211, 254, 50, 0) 100%);
+  }
+
+  /* Custom Range Slider Styles for Biophilic Futurism Theme */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+    position: relative;
+    z-index: 10;
+  }
+
+  input[type=range]:focus {
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: var(--color-secondary, #d3fe32);
+    cursor: pointer;
+    box-shadow: 0 0 16px var(--color-secondary, #d3fe32);
+    margin-top: -10px;
+    border: 2px solid var(--color-surface, #0c1513);
+    transition: transform 0.1s ease;
+  }
+
+  input[type=range]::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+  }
+
+  input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: var(--color-outline-variant, #2d3734);
+    border-radius: 9999px;
+    border: none;
+  }
+
+  /* Hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}

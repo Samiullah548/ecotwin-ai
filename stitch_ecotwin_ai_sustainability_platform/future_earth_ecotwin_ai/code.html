@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Future Earth Simulator - EcoTwin AI</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config (Injected) -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ffb4ab",
+                    "outline": "#8c928f",
+                    "surface-dim": "#0c1513",
+                    "on-background": "#dbe5e1",
+                    "primary": "#b0cdc2",
+                    "surface-container-high": "#232c29",
+                    "tertiary": "#afc6ff",
+                    "on-tertiary-fixed-variant": "#004299",
+                    "on-primary": "#1c352e",
+                    "surface": "#0c1513",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed": "#c8f323",
+                    "on-primary-fixed": "#052019",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#d9e2ff",
+                    "error-container": "#93000a",
+                    "on-tertiary-fixed": "#001944",
+                    "surface-variant": "#2d3734",
+                    "on-secondary": "#293500",
+                    "on-tertiary": "#002d6d",
+                    "surface-bright": "#323b39",
+                    "primary-fixed": "#cce9de",
+                    "outline-variant": "#424845",
+                    "on-primary-container": "#769188",
+                    "primary-container": "#0f2922",
+                    "surface-container-low": "#141d1b",
+                    "surface-tint": "#b0cdc2",
+                    "on-secondary-fixed-variant": "#3d4d00",
+                    "surface-container": "#18211f",
+                    "secondary-container": "#b8e100",
+                    "tertiary-container": "#002255",
+                    "on-surface-variant": "#c1c8c4",
+                    "on-secondary-container": "#4e6100",
+                    "inverse-on-surface": "#293230",
+                    "secondary": "#d3fe32",
+                    "inverse-surface": "#dbe5e1",
+                    "tertiary-fixed-dim": "#afc6ff",
+                    "on-secondary-fixed": "#171e00",
+                    "background": "#0c1513",
+                    "surface-container-highest": "#2d3734",
+                    "on-primary-fixed-variant": "#324c44",
+                    "on-surface": "#dbe5e1",
+                    "secondary-fixed-dim": "#aed500",
+                    "inverse-primary": "#4a645b",
+                    "surface-container-lowest": "#07100e",
+                    "on-tertiary-container": "#4787ff",
+                    "primary-fixed-dim": "#b0cdc2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-tablet": "32px",
+                    "margin-mobile": "20px",
+                    "unit": "8px",
+                    "gutter": "24px",
+                    "container-max": "1440px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Montserrat"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Montserrat"],
+                    "headline-lg-mobile": ["Montserrat"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Montserrat"]
+            },
+            "fontSize": {
+                    "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Base Biophilic Futurism Styles */
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        .glass-panel {
+            background: rgba(12, 21, 19, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-panel-floating {
+            background: rgba(20, 29, 27, 0.7);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glow-active {
+            box-shadow: 0 0 15px rgba(211, 254, 50, 0.4); /* Secondary color glow */
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, theme('colors.primary'), theme('colors.tertiary'));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Split Screen Divider */
+        .split-divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: theme('colors.secondary');
+            cursor: ew-resize;
+            z-index: 20;
+            box-shadow: 0 0 20px theme('colors.secondary');
+        }
+        
+        .split-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: theme('colors.surface-container-high');
+            border: 2px solid theme('colors.secondary');
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: theme('colors.secondary');
+        }
+
+        /* Custom Range Slider */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: theme('colors.secondary');
+            cursor: pointer;
+            box-shadow: 0 0 10px theme('colors.secondary');
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased h-screen w-screen overflow-hidden flex">
+<!-- Shared Component: SideNavBar -->
+<nav class="hidden md:flex flex-col h-full py-8 bg-surface-container-low/80 backdrop-blur-2xl fixed left-0 top-0 w-64 z-40 border-r border-white/10 shadow-2xl shadow-black/40">
+<div class="px-6 mb-12">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="eco" style="font-variation-settings: 'FILL' 1;">eco</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">EcoTwin AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Sustainability Engine</p>
+</div>
+</div>
+</div>
+<ul class="flex-1 space-y-2">
+<!-- Navigation Items Logic: Active = Future Earth based on intent -->
+<li>
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="temp_preferences_custom">temp_preferences_custom</span>
+<span class="font-label-md text-label-md">Climate Twin</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Assessment</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="model_training">model_training</span>
+<span class="font-label-md text-label-md">Simulator</span>
+</a>
+</li>
+<li>
+<!-- ACTIVE NAV ITEM -->
+<a class="bg-secondary/20 text-secondary border-l-4 border-secondary px-4 py-3 flex items-center gap-3 transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="public" style="font-variation-settings: 'FILL' 1;">public</span>
+<span class="font-label-md text-label-md">Future Earth</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="workspace_premium">workspace_premium</span>
+<span class="font-label-md text-label-md">Challenges</span>
+</a>
+</li>
+</ul>
+<div class="px-4 mt-auto">
+<a class="text-on-surface-variant hover:bg-white/5 px-4 py-3 flex items-center gap-3 hover:text-primary transition-all active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 relative md:ml-64 w-full h-full bg-surface-dim overflow-hidden">
+<!-- Interactive Background Simulator Area -->
+<div class="absolute inset-0 w-full h-full">
+<!-- Left Side: Business As Usual (Red/Orange hue) -->
+<div class="absolute inset-y-0 left-0 w-1/2 bg-cover bg-center transition-all duration-700 ease-in-out" data-alt="A stark, high-fidelity satellite visualization of Earth depicting a 'Business as Usual' climate scenario. The continents appear arid with diminished green cover, surrounded by oceans that have a slightly murky, unnatural tint. The lighting is dramatic and harsh, casting deep shadows that emphasize geographical stress. The overall visual style is a cinematic, slightly dystopian biophilic futurism, relying on a palette of deep surface blacks contrasted with alarming orange and muted brown hues." style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLtPBq1CQ5Mi-GuDp4-QMdI5wiAdFGyWkjzcCaNKkNn7BIkVNs_eBNr-nwm3EQU7F9l5e69eDycP6Nyr5pX5-ltcNdwNr7IJKGKROhziBXBtczNymoNe1BNivtZ6QCnkNrX1_9M4rrnuxOkra8vG04_Y-m80tAXplz44QPPlJGasGrZHNUDJo8NcM2W0EFtOHWAcqUPAbOXOJV0uUWlG-6NKhCc8uVM7K6b6432LFslVA0r8okNLuqDeQ40'); filter: sepia(0.3) saturate(0.8) hue-rotate(-30deg);">
+<div class="absolute inset-0 bg-black/40"></div>
+<div class="absolute top-8 left-8 glass-panel px-4 py-2 rounded-full border border-error/30 text-error flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">warning</span>
+<span class="font-label-md text-label-md">Business As Usual</span>
+</div>
+</div>
+<!-- Right Side: Action Plan (Vibrant Green/Blue hue) -->
+<div class="absolute inset-y-0 right-0 w-1/2 bg-cover bg-center transition-all duration-700 ease-in-out" data-alt="A breathtaking, high-fidelity satellite visualization of Earth depicting a successful 'Action Plan' climate scenario. The landmasses are flush with vibrant, lush biophilic greens, and the oceans are a deep, pristine tertiary blue. Soft, glowing atmospheric light wraps around the planet's curvature, highlighting restored ecosystems. The aesthetic represents optimistic biophilic futurism, utilizing a harmonious color palette of deep surface tones, vivid secondary lime greens, and technological hope." style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLtYGE6xENbMcwYB4goYFbj8Cbvke5YEGrk8xtI6NY43IXnbp5e-hlzZzXLS8OG0GWrCWm-qXxaIfVc3RRC8sF6apHxnuYkdjdz1gbN6Ylupw-fT97sgJIP3tctywQ4A-Y3VOIIJ3QDisNtldRehdkeUAYAxvELP4NFVEf4jbA10rIuQRQb9WQrO_OmlkyXNtqLptMbJTUD6I3GvJ-VOtBOnL3VDhLsq9SpxJxnmcZOq3EjgXlDUQfSm1w'); filter: saturate(1.5) hue-rotate(10deg);">
+<div class="absolute inset-0 bg-black/20"></div>
+<div class="absolute top-8 right-8 glass-panel px-4 py-2 rounded-full border border-secondary/30 text-secondary flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">eco</span>
+<span class="font-label-md text-label-md">Your Action Plan</span>
+</div>
+</div>
+<!-- Draggable Split Handle (Visual Only for this static demo) -->
+<div class="split-divider">
+<div class="split-handle">
+<span class="material-symbols-outlined">compare_arrows</span>
+</div>
+</div>
+</div>
+<!-- Foreground UI Layer -->
+<div class="absolute inset-0 pointer-events-none p-margin-mobile md:p-margin-desktop flex flex-col justify-between z-30">
+<!-- Top Section: Metrics -->
+<div class="flex justify-between items-start pointer-events-auto w-full">
+<!-- Left: Title & Insights -->
+<div class="w-full max-w-sm flex flex-col gap-6 mt-16 md:mt-0">
+<div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2 tracking-tight">Future Earth<br/><span class="text-gradient">Simulator</span></h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Projecting biospheric resilience based on current intervention models.</p>
+</div>
+<!-- Glassmorphism Card: Sustainability Forecast -->
+<div class="glass-panel-floating rounded-xl p-6 relative overflow-hidden">
+<!-- Decorative glow -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full"></div>
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">insights</span>
+<h3 class="font-label-md text-label-md text-primary tracking-widest uppercase">Forecast Insights</h3>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-1 border-l-2 border-primary/30 pl-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Coastal Resilience</span>
+<span class="font-body-md text-body-md text-on-surface">Mangrove restoration tracking ahead of 2030 targets.</span>
+</div>
+<div class="flex flex-col gap-1 border-l-2 border-secondary/30 pl-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Grid Decarbonization</span>
+<span class="font-body-md text-body-md text-on-surface">Accelerated phase-out shows +15% regional efficiency.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Key Metrics Panel -->
+<div class="hidden md:flex flex-col gap-4 max-w-sm">
+<!-- Metric 1 -->
+<div class="glass-panel-floating rounded-xl p-6 flex flex-col items-end text-right border-r-2 border-r-secondary">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Global Temp Delta</span>
+<div class="flex items-baseline gap-2">
+<span class="material-symbols-outlined text-secondary">arrow_downward</span>
+<span class="font-display-lg text-display-lg text-on-surface">1.2<span class="text-headline-md">°C</span></span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary mt-1">Avoided warming by 2050</span>
+</div>
+<!-- Metric 2 -->
+<div class="glass-panel-floating rounded-xl p-6 flex flex-col items-end text-right border-r-2 border-r-primary">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Biodiversity Saved</span>
+<div class="flex items-baseline gap-2">
+<span class="material-symbols-outlined text-primary">cruelty_free</span>
+<span class="font-display-lg text-display-lg text-on-surface">28<span class="text-headline-md">%</span></span>
+</div>
+<span class="font-label-sm text-label-sm text-primary mt-1">Species habitat preserved</span>
+</div>
+<!-- Metric 3 -->
+<div class="glass-panel-floating rounded-xl p-6 flex flex-col items-end text-right border-r-2 border-r-tertiary">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Sea Level Avoidance</span>
+<div class="flex items-baseline gap-2">
+<span class="material-symbols-outlined text-tertiary">water</span>
+<span class="font-display-lg text-display-lg text-on-surface">14<span class="text-headline-md">cm</span></span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary mt-1">Reduced glacial melt impact</span>
+</div>
+</div>
+</div>
+<!-- Bottom Section: Timeline Control -->
+<div class="w-full flex justify-center pointer-events-auto pb-8">
+<div class="glass-panel-floating rounded-full px-8 py-6 w-full max-w-3xl flex flex-col gap-4">
+<div class="flex justify-between items-center px-2">
+<span class="font-label-md text-label-md text-on-surface-variant transition-colors hover:text-secondary cursor-pointer">2030</span>
+<span class="font-headline-md text-headline-md text-secondary glow-active rounded-full px-4 py-1 bg-secondary/10">2040</span>
+<span class="font-label-md text-label-md text-on-surface-variant transition-colors hover:text-secondary cursor-pointer">2050</span>
+</div>
+<div class="relative w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<!-- Progress fill -->
+<div class="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-primary to-secondary"></div>
+<!-- Slider input (invisible functional overlay) -->
+<input class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer appearance-none" max="2050" min="2030" type="range" value="2040"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTwin AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap" rel="stylesheet"/>
+  </head>
+  <body class="bg-background text-on-background min-h-screen font-body-md text-body-md overflow-x-hidden selection:bg-secondary selection:text-on-secondary">
+    <!-- Ambient Background Lighting -->
+    <div class="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/5 blur-[120px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-tertiary/5 blur-[100px] pointer-events-none z-0"></div>
+    <div id="root" class="relative z-10 h-screen overflow-hidden flex"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -285,7 +285,7 @@ export const Dashboard: React.FC = () => {
       {/* Charts Area */}
       <section aria-label="Emission charts" className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mt-6">
         {/* Area Chart */}
-        <div className="glass-panel rounded-xl p-6 lg:col-span-2 flex flex-col h-[400px]">
+        <div className="glass-panel rounded-xl p-6 lg:col-span-2 flex flex-col min-h-[300px] h-[400px]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="font-headline-md text-headline-md text-on-surface">Emission Trends</h2>
             <label htmlFor="chart-range-select" className="sr-only">Chart time range</label>
@@ -300,7 +300,7 @@ export const Dashboard: React.FC = () => {
             </select>
           </div>
           <div className="flex-1 w-full" aria-label="Monthly carbon emission trend chart">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer aspect={2}>
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
 import { SideNavBar } from './SideNavBar';
 import clsx from 'clsx';
+import logo from '../assets/ecotwin_logo.png';
 
 export const Layout: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,7 +26,7 @@ export const Layout: React.FC = () => {
         aria-label="Mobile navigation bar"
       >
         <div className="flex justify-between items-center px-margin-mobile py-4 w-full">
-          <div className="font-headline-md text-headline-md font-bold text-primary">EcoTwin AI</div>
+          <img src={logo} alt="EcoTwin AI logo" className="h-8" />
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="text-on-surface"

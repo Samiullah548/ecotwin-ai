@@ -65,15 +65,14 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
         </div>
       </div>
 
-      <div className="relative w-full h-1 mt-2">
-        {/* Visual fill track */}
+      <div className="relative w-full h-2 mt-2">
+        {/* Background track */}
+        <div className="absolute inset-0 h-1 bg-gray-300 rounded-full" aria-hidden="true" />
+        {/* Active filled track */}
         <div
-          aria-hidden="true"
           className="absolute top-0 left-0 h-1 bg-secondary rounded-full"
-          style={{
-            width: `${fillPercent}%`,
-            boxShadow: '0 0 8px rgba(211,254,50,0.6)',
-          }}
+          style={{ width: `${fillPercent}%`, boxShadow: '0 0 8px rgba(211,254,50,0.6)' }}
+          aria-hidden="true"
         />
         <input
           id={id}
@@ -88,7 +87,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
           aria-valuenow={value}
           aria-valuetext={displayValue}
           onChange={(e) => onChange(parseInt(e.target.value))}
-          className="absolute top-[-10px] w-full cursor-pointer"
+          className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
         />
       </div>
 

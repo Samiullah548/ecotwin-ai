@@ -183,6 +183,7 @@ export const SignUp: React.FC = () => {
                 <input
                   id="signup-confirm"
                   type="password"
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"

@@ -132,6 +132,7 @@ export const Login: React.FC = () => {
                 <input
                   id="login-password"
                   type="password"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

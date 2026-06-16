@@ -67,7 +67,7 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Setup Config Warning Banner for Mock mode */}
-        {isDemoMode && (
+        {isDemoMode && import.meta.env.DEV && (
           <div className="border border-secondary/20 bg-secondary/5 backdrop-blur-md rounded-xl p-4 flex gap-3 text-left">
             <span className="material-symbols-outlined text-secondary shrink-0">
               info

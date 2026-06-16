@@ -28,7 +28,9 @@ if (isFirebaseConfigured) {
     auth = getAuth(app);
     db = getFirestore(app);
   } catch (error) {
-    console.error('Failed to initialize Firebase SDK:', error);
+    console.warn('Firebase SDK initialization failed, falling back to Demo Mode:', error);
+    auth = null;
+    db = null;
   }
 }
 

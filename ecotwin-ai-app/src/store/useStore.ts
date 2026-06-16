@@ -93,7 +93,7 @@ interface UserState {
   resetSettings: () => void;
   clearCache: () => void;
   resetProgress: () => void;
-  hydrateStore: (persistedState: Partial<UserState>) => void;
+  hydrateStore: (persistedState: Partial<Omit<UserState, 'settings'>> & { settings?: Partial<UserSettings> }) => void;
 }
 
 // ─── Default Settings ─────────────────────────────────────────────────────────
@@ -291,7 +291,7 @@ export const useStore = create<UserState>()((set, get) => ({
             ...DEFAULT_SETTINGS.connectedServices,
             ...(persistedState.settings.connectedServices ?? {}),
           },
-        };
+        } as UserSettings;
       }
 
       // Sanitize the avatar URL using the shared helper (single source of truth)
@@ -307,7 +307,7 @@ export const useStore = create<UserState>()((set, get) => ({
       merged.ecoLevel = calculatedLevel;
       merged.ecoTitle = getTitleForLevel(calculatedLevel);
 
-      return merged;
+      return merged as UserState;
     });
   },
 }));

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAuthStore } from '../useAuthStore';
 
 describe('useAuthStore', () => {
@@ -141,5 +141,142 @@ describe('useAuthStore', () => {
     // Reset registered email
     const successRes = await state.resetPassword('alice@ecotwin.ai');
     expect(successRes.success).toBe(true);
+  });
+
+  describe('Firebase Mode (Non-Demo)', () => {
+    beforeEach(() => {
+      useAuthStore.setState({
+        currentUser: null,
+        isInitialized: false,
+        isDemoMode: false,
+        error: null,
+      });
+      vi.clearAllMocks();
+    });
+
+    it('should initialize auth with Firebase onAuthStateChanged', () => {
+      const state = useAuthStore.getState();
+      state.initializeAuth();
+      expect(useAuthStore.getState().isInitialized).toBe(true);
+    });
+
+    it('should successfully sign up a user via Firebase', async () => {
+      const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+      vi.mocked(createUserWithEmailAndPassword).mockResolvedValueOnce({
+        user: { uid: 'fb_123', email: 'fb@ecotwin.ai' }
+      } as any);
+
+      const state = useAuthStore.getState();
+      const res = await state.signUp('Firebase User', 'fb@ecotwin.ai', 'securepass');
+
+      expect(res.success).toBe(true);
+      expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(expect.any(Object), 'fb@ecotwin.ai', 'securepass');
+      expect(updateProfile).toHaveBeenCalledWith(expect.any(Object), { displayName: 'Firebase User' });
+    });
+
+    it('should handle Firebase sign up errors and try falling back to Demo Mode if configuration not found', async () => {
+      const { createUserWithEmailAndPassword } = await import('firebase/auth');
+      vi.mocked(createUserWithEmailAndPassword).mockRejectedValueOnce({
+        code: 'auth/configuration-not-found',
+      });
+
+      const state = useAuthStore.getState();
+      const res = await state.signUp('Fallback User', 'fallback@ecotwin.ai', 'securepass');
+
+      // The fallback should switch to Demo Mode and succeed (using mock signUp)
+      expect(res.success).toBe(true);
+      expect(useAuthStore.getState().isDemoMode).toBe(true);
+      expect(useAuthStore.getState().currentUser?.displayName).toBe('Fallback User');
+    });
+
+    it('should handle generic Firebase sign up failures', async () => {
+      const { createUserWithEmailAndPassword } = await import('firebase/auth');
+      vi.mocked(createUserWithEmailAndPassword).mockRejectedValueOnce(new Error('Firebase network error'));
+
+      const state = useAuthStore.getState();
+      const res = await state.signUp('Error User', 'error@ecotwin.ai', 'securepass');
+
+      expect(res.success).toBe(false);
+      expect(res.error).toBe('Firebase network error');
+      expect(useAuthStore.getState().error).toBe('Firebase network error');
+    });
+
+    it('should successfully log in via Firebase', async () => {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      vi.mocked(signInWithEmailAndPassword).mockResolvedValueOnce({} as any);
+
+      const state = useAuthStore.getState();
+      const res = await state.login('fb@ecotwin.ai', 'securepass');
+
+      expect(res.success).toBe(true);
+      expect(signInWithEmailAndPassword).toHaveBeenCalledWith(expect.any(Object), 'fb@ecotwin.ai', 'securepass');
+    });
+
+    it('should handle Firebase login configuration errors by falling back to Demo Mode', async () => {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce({
+        code: 'auth/configuration-not-found',
+      });
+
+      const state = useAuthStore.getState();
+      // Need a registered user in demo mode to complete the fallback login successfully
+      const mockUsers = [{
+        uid: 'demo_123',
+        email: 'fallback@ecotwin.ai',
+        displayName: 'Fallback User',
+        passwordHash: btoa('ecotwin-salt-securepass-fallback@ecotwin.ai'),
+      }];
+      localStorage.setItem('ecotwin_mock_users', JSON.stringify(mockUsers));
+
+      const res = await state.login('fallback@ecotwin.ai', 'securepass');
+      expect(res.success).toBe(true);
+      expect(useAuthStore.getState().isDemoMode).toBe(true);
+    });
+
+    it('should handle generic Firebase login errors', async () => {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce({
+        code: 'auth/invalid-credential',
+      });
+
+      const state = useAuthStore.getState();
+      const res = await state.login('fb@ecotwin.ai', 'wrongpass');
+
+      expect(res.success).toBe(false);
+      expect(res.error).toBe('Failed to log in. Please check your credentials.');
+    });
+
+    it('should log out via Firebase', async () => {
+      const { signOut } = await import('firebase/auth');
+      vi.mocked(signOut).mockResolvedValueOnce();
+
+      const state = useAuthStore.getState();
+      await state.logout();
+
+      expect(signOut).toHaveBeenCalled();
+      expect(useAuthStore.getState().currentUser).toBeNull();
+    });
+
+    it('should reset password via Firebase', async () => {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      vi.mocked(sendPasswordResetEmail).mockResolvedValueOnce();
+
+      const state = useAuthStore.getState();
+      const res = await state.resetPassword('fb@ecotwin.ai');
+
+      expect(res.success).toBe(true);
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(expect.any(Object), 'fb@ecotwin.ai');
+    });
+
+    it('should handle Firebase password reset errors', async () => {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      vi.mocked(sendPasswordResetEmail).mockRejectedValueOnce(new Error('Reset failed'));
+
+      const state = useAuthStore.getState();
+      const res = await state.resetPassword('fb@ecotwin.ai');
+
+      expect(res.success).toBe(false);
+      expect(res.error).toBe('Reset failed');
+    });
   });
 });

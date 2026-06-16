@@ -7,7 +7,6 @@ import {
 import { useStore, getScoreGrade } from '../store/useStore';
 import type { ActivityEntry } from '../store/useStore';
 import { Modal } from '../components/Modal';
-import { LOG_ACTIONS } from '../utils/constants';
 import {
   generateMonthlyEmissions,
   buildDonutData,
@@ -15,71 +14,10 @@ import {
   downloadReport,
 } from '../utils/carbonCalculations';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ChartTooltipProps {
-  active?: boolean;
-  payload?: Array<{ value: number }>;
-  label?: string;
-}
-
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
-
-const ChartTooltip: React.FC<ChartTooltipProps> = React.memo(({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-surface-container border border-white/10 rounded-lg px-4 py-2 shadow-xl backdrop-blur-md">
-        <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
-        <p className="font-headline-md text-headline-md text-secondary">{payload[0].value}t</p>
-      </div>
-    );
-  }
-  return null;
-});
-ChartTooltip.displayName = 'ChartTooltip';
-
-// ─── Log Action Modal Content ─────────────────────────────────────────────────
-
-const LogActionModalContent: React.FC<{ onClose: () => void }> = React.memo(({ onClose }) => {
-  const { logActivity } = useStore();
-  return (
-    <div className="space-y-3">
-      {LOG_ACTIONS.map((action) => (
-        <button
-          key={action.label}
-          className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-secondary/50 hover:bg-secondary/5 transition-all text-left"
-          onClick={() => {
-            logActivity({
-              icon: action.icon,
-              label: action.label,
-              saved: action.saved,
-              waterSaved: action.waterSaved,
-              color: action.color,
-            });
-            onClose();
-          }}
-        >
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{
-              background: `rgba(${action.color === 'secondary' ? '211,254,50' : action.color === 'tertiary' ? '175,198,255' : '176,205,194'}, 0.2)`,
-              color: action.color === 'secondary' ? '#d3fe32' : action.color === 'tertiary' ? '#afc6ff' : '#b0cdc2',
-            }}
-            aria-hidden="true"
-          >
-            <span className="material-symbols-outlined text-[20px]">{action.icon}</span>
-          </div>
-          <div className="flex-1">
-            <p className="font-label-md text-label-md text-on-surface">{action.label}</p>
-            <p className="font-label-sm text-label-sm text-secondary">−{action.saved}kg CO₂</p>
-          </div>
-          <span className="material-symbols-outlined text-on-surface-variant" aria-hidden="true">chevron_right</span>
-        </button>
-      ))}
-    </div>
-  );
-});
-LogActionModalContent.displayName = 'LogActionModalContent';
+// Subcomponents
+import { StatsBento } from '../components/Dashboard/StatsBento';
+import { LogActionModalContent } from '../components/Dashboard/LogActionModalContent';
+import { ChartTooltip } from '../components/Dashboard/ChartTooltip';
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
@@ -189,77 +127,13 @@ export const Dashboard: React.FC = () => {
       </header>
 
       {/* Top Stats Bento */}
-      <section aria-label="Key sustainability metrics" className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-        {/* Carbon Footprint */}
-        <div className="glass-panel rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group hover:border-secondary/30 transition-colors">
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-error/10 rounded-full blur-2xl group-hover:bg-error/20 transition-all" aria-hidden="true" />
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-white/5" aria-hidden="true">
-              <span className="material-symbols-outlined text-error">co2</span>
-            </div>
-            <span className="bg-surface-container px-3 py-1 rounded-full font-label-sm text-label-sm text-on-surface-variant">YTD Total</span>
-          </div>
-          <div>
-            <h2 className="font-label-md text-label-md text-on-surface-variant mb-1">Carbon Footprint</h2>
-            <div className="flex items-baseline gap-2">
-              <span className="font-display-lg text-display-lg text-on-surface">{carbonFootprint}</span>
-              <span className="font-headline-md text-headline-md text-error">t</span>
-            </div>
-            <p className={`font-label-sm text-label-sm flex items-center gap-1 mt-2 ${carbonFootprint < 10 ? 'text-secondary' : 'text-error'}`}>
-              <span className="material-symbols-outlined text-[14px]" aria-hidden="true">{carbonFootprint < 10 ? 'arrow_downward' : 'arrow_upward'}</span>
-              {carbonFootprint < 10 ? 'Below' : 'Above'} global avg (10t)
-            </p>
-          </div>
-        </div>
-
-        {/* Eco Score */}
-        <div className="glass-panel rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group hover:border-secondary/30 transition-colors">
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-secondary/10 rounded-full blur-2xl group-hover:bg-secondary/20 transition-all" aria-hidden="true" />
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-white/5" aria-hidden="true">
-              <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>psychiatry</span>
-            </div>
-            {/* Score ring — decorative */}
-            <div className="relative w-12 h-12 flex items-center justify-center" aria-hidden="true">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path className="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                <path className="text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={scoreDash} strokeWidth="3" />
-              </svg>
-              <span className="absolute font-label-sm text-label-sm text-secondary font-bold">{grade}</span>
-            </div>
-          </div>
-          <div>
-            <h2 className="font-label-md text-label-md text-on-surface-variant mb-1">Eco Score</h2>
-            <div className="flex flex-col gap-1">
-              <span className="font-headline-lg-mobile text-headline-lg-mobile md:text-[64px] leading-tight text-on-surface">{ecoScore}</span>
-              <span className="font-body-md text-body-md text-on-surface-variant">Top {Math.max(5, 100 - ecoScore)}% in your region</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Monthly Progress */}
-        <div className="glass-panel rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group hover:border-tertiary/30 transition-colors">
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-tertiary/10 rounded-full blur-2xl group-hover:bg-tertiary/20 transition-all" aria-hidden="true" />
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-white/5" aria-hidden="true">
-              <span className="material-symbols-outlined text-tertiary">moving</span>
-            </div>
-            <span className="bg-surface-container px-3 py-1 rounded-full font-label-sm text-label-sm text-on-surface-variant">This Month</span>
-          </div>
-          <div>
-            <h2 className="font-label-md text-label-md text-on-surface-variant mb-1">Monthly Progress</h2>
-            <div className="flex items-baseline gap-2">
-              <span className={`font-display-lg text-display-lg ${monthlyProgress >= 0 ? 'text-tertiary' : 'text-error'}`}>
-                {monthlyProgress >= 0 ? '+' : ''}{monthlyProgress}
-              </span>
-              <span className={`font-headline-md text-headline-md ${monthlyProgress >= 0 ? 'text-tertiary' : 'text-error'}`}>%</span>
-            </div>
-            <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mt-2">
-              {monthlyProgress > 0 ? 'Reduction in overall footprint' : 'Increase vs last month'}
-            </p>
-          </div>
-        </div>
-      </section>
+      <StatsBento
+        carbonFootprint={carbonFootprint}
+        ecoScore={ecoScore}
+        grade={grade}
+        scoreDash={scoreDash}
+        monthlyProgress={monthlyProgress}
+      />
 
       {/* AI Insight Banner */}
       <section aria-label="AI sustainability insight" className="glass-panel rounded-xl p-1 relative overflow-hidden group mt-6">
@@ -347,7 +221,7 @@ export const Dashboard: React.FC = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(val) => [`${val}%`, '']}
+                  formatter={(percentValue) => [`${percentValue}%`, '']}
                   contentStyle={{ background: '#18211f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
                   itemStyle={{ color: '#dbe5e1' }}
                 />

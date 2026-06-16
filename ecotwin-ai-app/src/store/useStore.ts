@@ -82,7 +82,7 @@ interface UserState {
   setCarbonFootprint: (footprint: number) => void;
   setEmissionBreakdown: (breakdown: EmissionBreakdown) => void;
   setAssessmentAnswers: (answers: AssessmentAnswers) => void;
-  setMonthlyProgress: (val: number) => void;
+  setMonthlyProgress: (progress: number) => void;
   updateLevel: () => void;
   toggleDarkMode: () => void;
   toggleChallenge: (id: number) => void;
@@ -168,7 +168,7 @@ export const useStore = create<UserState>()((set, get) => ({
   setCarbonFootprint:  (footprint) => set({ carbonFootprint: clampValue(footprint, 0, 100, 14.2) }),
   setEmissionBreakdown:(breakdown) => set({ emissionBreakdown: breakdown }),
   setAssessmentAnswers:(answers)   => set({ assessmentAnswers: answers }),
-  setMonthlyProgress:  (val)       => set({ monthlyProgress: clampValue(val, -100, 100, 0) }),
+  setMonthlyProgress:  (progress)  => set({ monthlyProgress: clampValue(progress, -100, 100, 0) }),
 
   // ─ Level recalculation ────────────────────────────────────────────────
   updateLevel: () => {
